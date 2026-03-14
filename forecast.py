@@ -3,32 +3,35 @@ import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 
 # Load dataset
-data = pd.read_csv("sales_data.csv")
+data = pd.read_csv("Sample - Superstore.csv", encoding="latin1")
 
-# Create number index for dates
-data['day'] = range(len(data))
+# Convert date
+data['Order Date'] = pd.to_datetime(data['Order Date'])
 
-X = data[['day']]
-y = data['sales']
+# Group sales by date
+daily_sales = data.groupby('Order Date')['Sales'].sum().reset_index()
+
+# Create time feature
+daily_sales['day_number'] = range(len(daily_sales))
+
+X = daily_sales[['day_number']]
+y = daily_sales['Sales']
 
 # Train model
 model = LinearRegression()
 model.fit(X, y)
 
-# Predict next 5 days
-future_days = [[len(data)+i] for i in range(5)]
-predictions = model.predict(future_days)
+# Predict future
+future_days = [[len(daily_sales)+i] for i in range(30)]
+forecast = model.predict(future_days)
 
-print("Future Sales Prediction:")
-print(predictions)
+print("Future Sales Prediction:", forecast)
 
-# Plot graph
-plt.plot(data['day'], data['sales'], label="Actual Sales")
-plt.plot(range(len(data), len(data)+5), predictions, label="Forecast")
+# Plot
+plt.plot(daily_sales['day_number'], daily_sales['Sales'], label="Actual Sales")
+plt.plot(range(len(daily_sales), len(daily_sales)+30), forecast, label="Forecast")
 
-plt.xlabel("Days")
-plt.ylabel("Sales")
-plt.title("Sales Forecast")
 plt.legend()
-
-plt.show()
+plt.title("Sales Forecast") 
+plt.savefig("sales_forecast.png")
+plt.show() 
